@@ -4,8 +4,10 @@ using System.Collections;
 public class TempInvincibility : MonoBehaviour {
 	
 	public bool activated = false;
-	private double invLength = 3;
+	public double invLength = 1.5;
 	private double currentLength = 0;
+	public double blinkDelay = .05;
+	private double blinkTimer = 0;
 	
 	// Use this for initialization
 	void Start () {
@@ -19,11 +21,19 @@ public class TempInvincibility : MonoBehaviour {
 			if (currentLength > invLength)
 			{
 				DeActivate();
+				renderer.enabled = true;
 				currentLength = 0;
 			}
 			else
 			{
+				if (blinkTimer > blinkDelay)
+				{
+					renderer.enabled = !renderer.enabled;
+					blinkTimer = 0;
+				}
+				blinkTimer += Time.deltaTime;
 				currentLength += Time.deltaTime;
+				
 			}
 		}
 	}

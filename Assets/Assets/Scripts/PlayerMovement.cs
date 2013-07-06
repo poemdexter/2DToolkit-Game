@@ -11,6 +11,8 @@ public class PlayerMovement : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
+		// you didn't create it? can't control it!
+		if (!networkView.isMine) enabled = false;
 	}
 	
 	// Update is called once per frame

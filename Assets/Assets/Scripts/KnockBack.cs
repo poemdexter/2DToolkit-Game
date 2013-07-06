@@ -7,13 +7,11 @@ public class KnockBack : MonoBehaviour
 	
 	void OnCollisionEnter(Collision collision)
 	{
-		Debug.Log("e hit");
 		DoKnockback(collision);
 	}
 	
 	void OnCollisionStay(Collision collision)
 	{
-		Debug.Log("s hit");
 		DoKnockback(collision);
 	}
 	
@@ -21,7 +19,6 @@ public class KnockBack : MonoBehaviour
 	{
 		if (collision.collider.tag == "Player")
 		{
-			Debug.Log("stay collision");
 			if(!collision.collider.GetComponent<TempInvincibility>().activated)
 			{
 				
