@@ -9,30 +9,33 @@ public class PlayerMovement : MonoBehaviour
 	private bool canMove = true;
 	
 	// Use this for initialization
-	void Start () 
-	{
-		// you didn't create it? can't control it!
-		if (!networkView.isMine) enabled = false;
-	}
+	void Start () {}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		if (canMove)
+		if(networkView.isMine)
 		{
-			if (Input.GetKeyDown(KeyCode.Space) && canJump)
+			if (canMove)
 			{
-				rigidbody.AddForce(Vector3.up * jumpPower);
-				canJump = false;
+				if (Input.GetKeyDown(KeyCode.Space) && canJump)
+				{
+					rigidbody.AddForce(Vector3.up * jumpPower);
+					canJump = false;
+				}
+				if (Input.GetKey(KeyCode.A))
+				{
+					transform.position += Vector3.left * speed * Time.deltaTime;
+				}
+				if (Input.GetKey(KeyCode.D))
+				{
+					transform.position += Vector3.right * speed * Time.deltaTime;
+				}
 			}
-			if (Input.GetKey(KeyCode.A))
-			{
-				transform.position += Vector3.left * speed * Time.deltaTime;
-			}
-			if (Input.GetKey(KeyCode.D))
-			{
-				transform.position += Vector3.right * speed * Time.deltaTime;
-			}
+		}
+		else
+		{
+			enabled = false;
 		}
 	}
 	
