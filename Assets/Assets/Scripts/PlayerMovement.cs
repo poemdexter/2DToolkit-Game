@@ -33,10 +33,6 @@ public class PlayerMovement : MonoBehaviour
 				}
 			}
 		}
-		else
-		{
-			enabled = false;
-		}
 	}
 	
 	void OnCollisionEnter(Collision collision)
