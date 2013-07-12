@@ -3,12 +3,15 @@ using System.Collections;
 
 public class PlayerMovement : MonoBehaviour 
 {
-	public float speed = 1.0f;	
-	public float jumpPower = 100.0f;
-	private bool canJump = false;
+	public float speed = 100.0f;	
+	public float jumpPower = 8.0f;
+	public float gravity = 5.0f;
+	public float terminalVelocity = 100.0f;
 	private bool canMove = true;
-	private Vector3 movement;
-	private Vector3 force;
+	private bool canJump = false;
+	private Vector3 position;
+	private Vector3 moveDirection;
+	private float gravityTotal;
 	
 	// Use this for initialization
 	void Start () {}
@@ -16,49 +19,58 @@ public class PlayerMovement : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{	
+		// it's us, lets do things legit
 		if(networkView.isMine)
 		{
-			movement = Vector3.zero;
 			if (canMove)
 			{
-				if (Input.GetKeyDown(KeyCode.Space) && canJump)
+				CharacterController controller = GetComponent<CharacterController>();
+				moveDirection = Vector3.zero;
+				
+				if (controller.isGrounded)
 				{
-					force = Vector3.up * jumpPower;
-					canJump = false;
-				}
-				if (Input.GetKey(KeyCode.A))
-				{
-					movement += Vector3.left * speed * Time.deltaTime;
-				}
-				if (Input.GetKey(KeyCode.D))
-				{
-					movement += Vector3.right * speed * Time.deltaTime;
+					canJump = true;
+					gravityTotal = 0;
 				}
 				
-				networkView.RPC("TellTheWorld", RPCMode.OthersBuffered, movement, force);
+				if (canJump && Input.GetButton("Jump"))
+				{
+					Debug.Log("jump");
+					moveDirection.y = jumpPower;
+				}
+				else canJump = false;
+				
+				if (Input.GetButton("Horizontal"))
+				{
+					moveDirection.x += Input.GetAxis("Horizontal") * speed;
+				}
+				
+				// todo acceleration due to gravity calculations
+				gravityTotal += gravity * Time.deltaTime;
+				if (gravityTotal >= terminalVelocity) gravityTotal = terminalVelocity;
+				moveDirection.y -= gravityTotal;
+				
+				controller.Move(moveDirection * Time.deltaTime);
+				networkView.RPC("TellTheWorld", RPCMode.AllBuffered, transform.position);
 			}
 		}
-		
-		if (movement != Vector3.zero || force != Vector3.zero)
+		else
 		{
-			transform.position += movement;
-			rigidbody.AddForce(force);
-			force = Vector3.zero;
+			// other player, just update position
+			transform.position = position;
 		}
 	}
 	
 	[RPC]
-	void TellTheWorld(Vector3 myMovement, Vector3 myForce)
+	void TellTheWorld(Vector3 myPosition)
 	{
-		movement = myMovement;
-		force = myForce;
+		position = myPosition;
 	}
 	
 	void OnCollisionEnter(Collision collision)
 	{
 		if(collision.collider.tag == "Ground")
 		{
-			canJump = true;
 			canMove = true;
 		}
 	}
