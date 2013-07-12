@@ -13,13 +13,24 @@ public class PlayerMovement : MonoBehaviour
 	private Vector3 moveDirection;
 	private float gravityTotal;
 	private float jumpTotal;
+	private tk2dSprite sprite;
+	private tk2dSpriteAnimator anim;
+	private bool walking = false;
+	private bool spriteFlipped = false;
+	private string animationClip;
 	
 	// Use this for initialization
-	void Start () {}
+	void Start () 
+	{
+		anim = GetComponent<tk2dSpriteAnimator>();
+		animationClip = "standing";
+	}
 	
 	// Update is called once per frame
 	void Update () 
 	{	
+		sprite = GetComponent<tk2dSprite>();
+		
 		// it's us, lets do things legit
 		if(networkView.isMine)
 		{
@@ -37,15 +48,35 @@ public class PlayerMovement : MonoBehaviour
 				
 				if (canJump && Input.GetButton("Jump"))
 				{
-					Debug.Log("jump");
-					moveDirection.y = jumpPower;
-					jumpPower -= gravity * Time.deltaTime;
+					moveDirection.y = jumpTotal;
+					jumpTotal -= gravity * Time.deltaTime;
+					if (jumpTotal < 0) jumpTotal = 0;
 				}
-				else canJump = false;
+				else 
+				{
+					canJump = false;
+				}
 				
 				if (Input.GetButton("Horizontal"))
 				{
 					moveDirection.x += Input.GetAxis("Horizontal") * speed;
+					sprite.FlipX = (Input.GetAxis("Horizontal") < 0) ? true : false;
+					spriteFlipped = sprite.FlipX;
+					
+					if (!walking)
+					{
+						animationClip = "walking";
+						walking = true;
+					}
+				}
+				else
+				{
+					if (walking)
+					{
+						animationClip = "standing";
+						walking = false;
+						
+					}
 				}
 				
 				// todo acceleration due to gravity calculations
@@ -54,27 +85,60 @@ public class PlayerMovement : MonoBehaviour
 				moveDirection.y -= gravityTotal;
 				
 				controller.Move(moveDirection * Time.deltaTime);
-				networkView.RPC("TellTheWorld", RPCMode.AllBuffered, transform.position);
+				anim.Play(animationClip);
+				
+				networkView.RPC("BroadcastPosition", RPCMode.AllBuffered, transform.position);
+				networkView.RPC("BroadcastAnimation", RPCMode.AllBuffered, spriteFlipped, animationClip);
 			}
 		}
-		else
+		else // other player
 		{
-			// other player, just update position
+			//update position
 			transform.position = position;
+			
+			//update animation
+			sprite.FlipX = spriteFlipped;
+			anim.Play(animationClip);
 		}
 	}
 	
 	[RPC]
-	void TellTheWorld(Vector3 myPosition)
+	void BroadcastPosition(Vector3 myPosition)
 	{
 		position = myPosition;
 	}
 	
-	void OnCollisionEnter(Collision collision)
+	[RPC]
+	void BroadcastAnimation(bool flipped, string clip)
 	{
-		if(collision.collider.tag == "Ground")
+		spriteFlipped = flipped;
+		animationClip = clip;
+	}
+	
+	// none of this works!
+	void OnControllerColliderHit(ControllerColliderHit hit)
+	{
+		if(hit.collider.tag == "Ground")
 		{
 			canMove = true;
+		}
+	}
+	
+	void OnTriggerEnter(Collider collider)
+	{
+		if(collider.tag == "Treasure")
+		{
+			ChestController chest = collider.GetComponent<ChestController>();
+			if (chest.GetChestState() == ChestState.closed) chest.OpenChest();
+		}
+	}
+	
+	void OnTriggerExit(Collider collider)
+	{
+		if(collider.tag == "Treasure")
+		{
+			ChestController chest = collider.GetComponent<ChestController>();
+			if (chest.GetChestState() == ChestState.opened) chest.CloseChest();
 		}
 	}
 	
