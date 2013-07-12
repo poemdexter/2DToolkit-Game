@@ -6,12 +6,13 @@ public class PlayerMovement : MonoBehaviour
 	public float speed = 100.0f;	
 	public float jumpPower = 8.0f;
 	public float gravity = 5.0f;
-	public float terminalVelocity = 100.0f;
+	public float terminalVelocity = 50.0f;
 	private bool canMove = true;
 	private bool canJump = false;
 	private Vector3 position;
 	private Vector3 moveDirection;
 	private float gravityTotal;
+	private float jumpTotal;
 	
 	// Use this for initialization
 	void Start () {}
@@ -30,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
 				if (controller.isGrounded)
 				{
 					canJump = true;
+					jumpTotal = jumpPower;
 					gravityTotal = 0;
 				}
 				
@@ -37,6 +39,7 @@ public class PlayerMovement : MonoBehaviour
 				{
 					Debug.Log("jump");
 					moveDirection.y = jumpPower;
+					jumpPower -= gravity * Time.deltaTime;
 				}
 				else canJump = false;
 				
