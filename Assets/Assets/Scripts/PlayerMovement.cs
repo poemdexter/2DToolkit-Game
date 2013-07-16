@@ -4,11 +4,14 @@ using System.Collections;
 public class PlayerMovement : MonoBehaviour 
 {
 	public float speed = 100.0f;	
-	public float jumpPower = 8.0f;
-	public float gravity = 5.0f;
+	public float jumpPower = 40.0f;
+	public float shortJumpPower = 20.0f;
+	public float gravity = 3.0f;
 	public float terminalVelocity = 50.0f;
 	private bool canMove = true;
 	private bool canJump = false;
+	private bool isJumping = false; 
+	private bool isFalling = true; // start off falling to ground
 	private Vector3 position;
 	private Vector3 moveDirection;
 	private float gravityTotal;
@@ -24,6 +27,7 @@ public class PlayerMovement : MonoBehaviour
 	{
 		anim = GetComponent<tk2dSpriteAnimator>();
 		animationClip = "standing";
+		gravityTotal = gravity;
 	}
 	
 	// Update is called once per frame
@@ -39,27 +43,9 @@ public class PlayerMovement : MonoBehaviour
 				CharacterController controller = GetComponent<CharacterController>();
 				moveDirection = Vector3.zero;
 				
-				if (controller.isGrounded)
-				{
-					canJump = true;
-					jumpTotal = jumpPower;
-					gravityTotal = 0;
-				}
-				
-				if (canJump && Input.GetButton("Jump"))
-				{
-					moveDirection.y = jumpTotal;
-					jumpTotal -= gravity * Time.deltaTime;
-					if (jumpTotal < 0) jumpTotal = 0;
-				}
-				else 
-				{
-					canJump = false;
-				}
-				
 				if (Input.GetButton("Horizontal"))
 				{
-					moveDirection.x += Input.GetAxis("Horizontal") * speed;
+					moveDirection.x += Input.GetAxis("Horizontal") * speed * Time.deltaTime;
 					sprite.FlipX = (Input.GetAxis("Horizontal") < 0) ? true : false;
 					spriteFlipped = sprite.FlipX;
 					
@@ -75,16 +61,52 @@ public class PlayerMovement : MonoBehaviour
 					{
 						animationClip = "standing";
 						walking = false;
-						
 					}
 				}
 				
-				// todo acceleration due to gravity calculations
-				gravityTotal += gravity * Time.deltaTime;
-				if (gravityTotal >= terminalVelocity) gravityTotal = terminalVelocity;
-				moveDirection.y -= gravityTotal;
+				if (controller.isGrounded)
+				{
+					gravityTotal = gravity;
+					isJumping = false;
+					isFalling = false;
+					canJump = true;
+				}
 				
-				controller.Move(moveDirection * Time.deltaTime);
+				// if grounded and jump
+				if (canJump && Input.GetButton("Jump"))
+				{
+					jumpTotal = jumpPower;
+					isJumping = true;
+					isFalling = true;
+					canJump = false;
+				}
+				// else if still holding jump
+				else if (isJumping && Input.GetButton("Jump"))
+				{
+					
+				}
+				// else let go of jump
+				else 
+				{
+					if (isJumping) // still in the air
+					{
+						if (jumpTotal - gravityTotal > 0) // we're going up still
+						{
+							if (jumpTotal > shortJumpPower) jumpTotal = shortJumpPower;
+						}
+					}
+				}
+				
+				if (isFalling)
+				{
+					moveDirection.y += jumpTotal * Time.deltaTime;
+					gravityTotal += gravity;
+				}
+				
+				if (gravityTotal >= terminalVelocity) gravityTotal = terminalVelocity;
+				moveDirection.y -= gravityTotal * Time.deltaTime;
+				
+				controller.Move(moveDirection);
 				anim.Play(animationClip);
 				
 				networkView.RPC("BroadcastPosition", RPCMode.AllBuffered, transform.position);
