@@ -49,20 +49,10 @@ public class PlayerMovement : MonoBehaviour
 					sprite.FlipX = (Input.GetAxis("Horizontal") < 0) ? true : false;
 					spriteFlipped = sprite.FlipX;
 					
-					if (!walking)
-					{
-						animationClip = "walking";
-						walking = true;
-					}
+					if (!walking) walking = true;
 				}
-				else
-				{
-					if (walking)
-					{
-						animationClip = "standing";
-						walking = false;
-					}
-				}
+				else 
+					if (walking) walking = false;
 				
 				if (controller.isGrounded)
 				{
@@ -110,6 +100,11 @@ public class PlayerMovement : MonoBehaviour
 				anim.Play(animationClip);
 				
 				networkView.RPC("BroadcastPosition", RPCMode.AllBuffered, transform.position);
+				
+				if (isJumping) animationClip = "jumping";
+				else if (walking) animationClip = "walking";
+				else animationClip = "standing";
+				
 				networkView.RPC("BroadcastAnimation", RPCMode.AllBuffered, spriteFlipped, animationClip);
 			}
 		}
@@ -143,24 +138,6 @@ public class PlayerMovement : MonoBehaviour
 		if(hit.collider.tag == "Ground")
 		{
 			canMove = true;
-		}
-	}
-	
-	void OnTriggerEnter(Collider collider)
-	{
-		if(collider.tag == "Treasure")
-		{
-			ChestController chest = collider.GetComponent<ChestController>();
-			if (chest.GetChestState() == ChestState.closed) chest.OpenChest();
-		}
-	}
-	
-	void OnTriggerExit(Collider collider)
-	{
-		if(collider.tag == "Treasure")
-		{
-			ChestController chest = collider.GetComponent<ChestController>();
-			if (chest.GetChestState() == ChestState.opened) chest.CloseChest();
 		}
 	}
 	
