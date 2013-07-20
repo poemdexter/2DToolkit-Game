@@ -61,6 +61,10 @@ public class PlayerMovement : MonoBehaviour
 					isFalling = false;
 					canJump = true;
 				}
+				else
+				{
+					isFalling = true;
+				}
 				
 				// if grounded and jump
 				if (canJump && Input.GetButton("Jump"))
@@ -76,22 +80,17 @@ public class PlayerMovement : MonoBehaviour
 					
 				}
 				// else let go of jump
-				else 
+				else if (isJumping) // still in the air
 				{
-					if (isJumping) // still in the air
+					if (jumpTotal - gravityTotal > 0) // we're going up still
 					{
-						if (jumpTotal - gravityTotal > 0) // we're going up still
-						{
-							if (jumpTotal > shortJumpPower) jumpTotal = shortJumpPower;
-						}
+						if (jumpTotal > shortJumpPower) jumpTotal = shortJumpPower;
 					}
 				}
 				
-				if (isFalling)
-				{
-					moveDirection.y += jumpTotal * Time.deltaTime;
-					gravityTotal += gravity;
-				}
+				if (isJumping) moveDirection.y += jumpTotal * Time.deltaTime;
+				
+				if (isFalling) gravityTotal += gravity;
 				
 				if (gravityTotal >= terminalVelocity) gravityTotal = terminalVelocity;
 				moveDirection.y -= gravityTotal * Time.deltaTime;
