@@ -3,18 +3,18 @@ using System.Collections;
 
 public class PlayerActions : MonoBehaviour 
 {
+	public double secondsToOpen = 3;
+	
 	private bool canOpenChest = false;
 	private bool openingChest = false;
 	private ChestController attemptedChest;
 	private double openTime = 0;
 	
-	public double secondsToOpen = 3;
-	
 	void Update()
 	{
 		if (networkView.isMine)
 		{
-			if (canOpenChest && Input.GetButton("Open"))
+			if (canOpenChest && PlayerCanOpen() && Input.GetButton("Open"))
 			{
 				if (!openingChest) // haven't started opening yet, so let's start
 				{
@@ -56,5 +56,15 @@ public class PlayerActions : MonoBehaviour
 			openingChest = false;
 			openTime = 0;
 		}
+	}
+	
+	bool PlayerCanOpen()
+	{
+		return !GetComponent<PlayerMovement>().IsMoving();
+	}
+	
+	public bool IsPicking()
+	{
+		return openingChest;
 	}
 }

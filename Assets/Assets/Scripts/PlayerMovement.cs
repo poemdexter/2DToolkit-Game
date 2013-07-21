@@ -9,20 +9,21 @@ public class PlayerMovement : MonoBehaviour
 	public float terminalVelocity = 50.0f;
 	public float extraJumpPowerTime = 1.0f;
 	private float upVelocity = 0;
+	private float gravityTotal;
+	private float jumpTotalTime;
 	private bool canMove = true;
 	private bool canJump = false;
 	private bool isJumping = false; 
 	private bool isFalling = true; // start off falling to ground
-	private Vector3 position;
-	private Vector3 moveDirection;
-	private float gravityTotal;
-	private float jumpTotalTime;
-	private tk2dSprite sprite;
-	private tk2dSpriteAnimator anim;
 	private bool walking = false;
 	private bool spriteFlipped = false;
+	private Vector3 position;
+	private Vector3 moveDirection;
+	private tk2dSprite sprite;
+	private tk2dSpriteAnimator anim;	
 	private string animationClip;
 	private CharacterController controller;
+	private PlayerActions actions;
 	
 	// Use this for initialization
 	void Start () 
@@ -40,6 +41,8 @@ public class PlayerMovement : MonoBehaviour
 		// it's us, lets do things legit
 		if(networkView.isMine)
 		{
+			actions = GetComponent<PlayerActions>();
+			
 			if (canMove)
 			{
 				controller = GetComponent<CharacterController>();
@@ -78,13 +81,16 @@ public class PlayerMovement : MonoBehaviour
 				moveDirection.y += upVelocity * Time.deltaTime;
 				
 				controller.Move(moveDirection);
-				anim.Play(animationClip);
 				
+				// tell network of new position
 				networkView.RPC("BroadcastPosition", RPCMode.AllBuffered, transform.position);
 				
 				if (isJumping) animationClip = "jumping";
 				else if (walking) animationClip = "walking";
+				else if (actions.IsPicking()) animationClip = "picking";
 				else animationClip = "standing";
+				
+				anim.Play(animationClip);
 				
 				networkView.RPC("BroadcastAnimation", RPCMode.AllBuffered, spriteFlipped, animationClip);
 			}
@@ -160,5 +166,15 @@ public class PlayerMovement : MonoBehaviour
 	bool IsTouchingCeiling()
 	{
 		return (controller.collisionFlags & CollisionFlags.CollidedAbove) != 0;
+	}
+	
+	public bool IsMoving()
+	{
+		return walking || isJumping || isFalling;
+	}
+	
+	public bool IsSpriteFlipped()
+	{
+		return spriteFlipped;
 	}
 }
