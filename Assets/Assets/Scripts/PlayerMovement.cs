@@ -4,10 +4,11 @@ using System.Collections;
 public class PlayerMovement : MonoBehaviour 
 {
 	public float speed = 100.0f;	
-	public float jumpPower = 40.0f;
-	public float shortJumpPower = 20.0f;
+	public float jumpPower = 20.0f;
 	public float gravity = 3.0f;
 	public float terminalVelocity = 50.0f;
+	public float extraJumpPowerTime = 1.0f;
+	private float upVelocity = 0;
 	private bool canMove = true;
 	private bool canJump = false;
 	private bool isJumping = false; 
@@ -15,12 +16,13 @@ public class PlayerMovement : MonoBehaviour
 	private Vector3 position;
 	private Vector3 moveDirection;
 	private float gravityTotal;
-	private float jumpTotal;
+	private float jumpTotalTime;
 	private tk2dSprite sprite;
 	private tk2dSpriteAnimator anim;
 	private bool walking = false;
 	private bool spriteFlipped = false;
 	private string animationClip;
+	private CharacterController controller;
 	
 	// Use this for initialization
 	void Start () 
@@ -40,7 +42,7 @@ public class PlayerMovement : MonoBehaviour
 		{
 			if (canMove)
 			{
-				CharacterController controller = GetComponent<CharacterController>();
+				controller = GetComponent<CharacterController>();
 				moveDirection = Vector3.zero;
 				
 				if (Input.GetButton("Horizontal"))
@@ -58,42 +60,22 @@ public class PlayerMovement : MonoBehaviour
 				{
 					gravityTotal = gravity;
 					isJumping = false;
+					jumpTotalTime = 0;
 					isFalling = false;
 					canJump = true;
+					upVelocity = 0;
 				}
 				else
 				{
 					isFalling = true;
 				}
 				
-				// if grounded and jump
-				if (canJump && Input.GetButton("Jump"))
-				{
-					jumpTotal = jumpPower;
-					isJumping = true;
-					isFalling = true;
-					canJump = false;
-				}
-				// else if still holding jump
-				else if (isJumping && Input.GetButton("Jump"))
-				{
-					
-				}
-				// else let go of jump
-				else if (isJumping) // still in the air
-				{
-					if (jumpTotal - gravityTotal > 0) // we're going up still
-					{
-						if (jumpTotal > shortJumpPower) jumpTotal = shortJumpPower;
-					}
-				}
+				ApplyJumping();
 				
-				if (isJumping) moveDirection.y += jumpTotal * Time.deltaTime;
+				ApplyGravity();
 				
-				if (isFalling) gravityTotal += gravity;
-				
-				if (gravityTotal >= terminalVelocity) gravityTotal = terminalVelocity;
-				moveDirection.y -= gravityTotal * Time.deltaTime;
+				// jumpPower determined by ApplyJumping()
+				moveDirection.y += upVelocity * Time.deltaTime;
 				
 				controller.Move(moveDirection);
 				anim.Play(animationClip);
@@ -118,6 +100,39 @@ public class PlayerMovement : MonoBehaviour
 		}
 	}
 	
+	void ApplyJumping()
+	{
+		// if grounded and jump
+		if (canJump && Input.GetButton("Jump"))
+		{
+			jumpTotalTime = 0;
+			isJumping = true;
+			canJump = false;
+		}
+		// else if still holding jump
+		else if (isJumping && Input.GetButton("Jump"))
+		{
+			jumpTotalTime += Time.deltaTime;
+		}
+		else isJumping = false; // else let go of jump
+		
+		// hit ceiling? then fall now
+		if (IsTouchingCeiling()) isJumping = false;
+		
+		if (isJumping) upVelocity = jumpPower; 
+	}
+	
+	void ApplyGravity()
+	{
+		// not jumping or not super jumping or falling, so apply gravity
+		if (!isJumping || jumpTotalTime >= extraJumpPowerTime)
+		{
+			if (gravityTotal >= terminalVelocity) gravityTotal = terminalVelocity;
+			if (isFalling) gravityTotal += gravity;
+			moveDirection.y -= gravityTotal * Time.deltaTime;
+		}
+	}
+	
 	[RPC]
 	void BroadcastPosition(Vector3 myPosition)
 	{
@@ -134,14 +149,16 @@ public class PlayerMovement : MonoBehaviour
 	// none of this works!
 	void OnControllerColliderHit(ControllerColliderHit hit)
 	{
-		if(hit.collider.tag == "Ground")
-		{
-			canMove = true;
-		}
+		if (hit.collider.tag == "Ground") canMove = true;
 	}
 	
 	public void DisableMovement()
 	{
 		canMove = false;
+	}
+	
+	bool IsTouchingCeiling()
+	{
+		return (controller.collisionFlags & CollisionFlags.CollidedAbove) != 0;
 	}
 }
