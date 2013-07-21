@@ -20,26 +20,47 @@ public class ChestController : MonoBehaviour
 		anim.Play(state.ToString());
     }
 	
+	public ChestState GetChestState()
+	{
+		return state;
+	}
+	
     public void OpenChest()
 	{
 		anim.Play("opened");
 		state = ChestState.opened;
+		networkView.RPC("BroadcastChestState", RPCMode.AllBuffered, "opened");
 	}
 	
 	 public void CloseChest()
 	{
 		anim.Play("closed");
 		state = ChestState.closed;
+		networkView.RPC("BroadcastChestState", RPCMode.AllBuffered, "closed");
 	}
 	
 	public void TakeContents()
 	{
 		anim.Play("taken");
 		state = ChestState.taken;
+		networkView.RPC("BroadcastChestState", RPCMode.AllBuffered, "taken");
 	}
 	
-	public ChestState GetChestState()
+	[RPC]
+	void BroadcastChestState(string newState)
 	{
-		return state;
+		anim.Play(newState);
+		state = ConvertToState(newState);
+	}
+	
+	ChestState ConvertToState(string state)
+	{
+		switch(state)
+		{
+			case "opened": return ChestState.opened;
+			case "closed": return ChestState.closed;
+			case "taken": return ChestState.taken;
+			default: return ChestState.closed;
+		}
 	}
 }
