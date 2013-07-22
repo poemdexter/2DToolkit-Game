@@ -31,4 +31,9 @@ public class TreasureSpawner : MonoBehaviour
 			}
 		}
 	}
+	
+	public void RemoveChest()
+	{
+		if (Network.isServer) chestCount--;
+	}
 }

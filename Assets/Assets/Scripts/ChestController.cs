@@ -27,23 +27,27 @@ public class ChestController : MonoBehaviour
 	
     public void OpenChest()
 	{
-		anim.Play("opened");
-		state = ChestState.opened;
-		networkView.RPC("BroadcastChestState", RPCMode.AllBuffered, "opened");
+		// need to despawn this chest and decriment counter on spawner
+		networkView.RPC("BroadcastChestRemoval", RPCMode.All);
+		Network.Destroy(this.gameObject);
+		
+		//anim.Play("opened");
+		//state = ChestState.opened;
+		//networkView.RPC("BroadcastChestState", RPCMode.AllBuffered, "opened");
 	}
 	
 	 public void CloseChest()
 	{
 		anim.Play("closed");
 		state = ChestState.closed;
-		networkView.RPC("BroadcastChestState", RPCMode.AllBuffered, "closed");
+		networkView.RPC("BroadcastChestState", RPCMode.All, "closed");
 	}
 	
 	public void TakeContents()
 	{
 		anim.Play("taken");
 		state = ChestState.taken;
-		networkView.RPC("BroadcastChestState", RPCMode.AllBuffered, "taken");
+		networkView.RPC("BroadcastChestState", RPCMode.All, "taken");
 	}
 	
 	[RPC]
@@ -51,6 +55,13 @@ public class ChestController : MonoBehaviour
 	{
 		anim.Play(newState);
 		state = ConvertToState(newState);
+	}
+	
+	[RPC]
+	void BroadcastChestRemoval()
+	{
+		GameObject go = GameObject.Find("ChestSpawnPoints");
+		go.GetComponent<TreasureSpawner>().RemoveChest();
 	}
 	
 	ChestState ConvertToState(string state)
