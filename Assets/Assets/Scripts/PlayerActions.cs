@@ -43,7 +43,7 @@ public class PlayerActions : MonoBehaviour
 		if(collider.tag == "Treasure")
 		{
 			attemptedChest = collider.GetComponent<ChestController>();
-			canOpenChest = (attemptedChest.GetChestState == ChestState.closed) ? true : false;
+			canOpenChest = (attemptedChest.GetChestState() == ChestState.closed) ? true : false;
 		}
 	}
 	
