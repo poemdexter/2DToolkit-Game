@@ -5,7 +5,6 @@ using System.Collections.Generic;
 public class TreasureSpawner : MonoBehaviour
 {	
 	public GameObject chestPrefab;
-	public Transform spawnPoint;
 	public int maxChests = 1;
 	private int chestCount = 0;
 	private List<Transform> spawnList;
