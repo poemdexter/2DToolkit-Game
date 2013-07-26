@@ -42,7 +42,16 @@ public class TitleUIManager : MonoBehaviour {
 	void StartServer()
 	{
 		Network.InitializeServer(4, 9001, !Network.HavePublicAddress());
-		MasterServer.RegisterHost(gameTypeName, "poem's game");
+		// get game name
+		string gameNameInput;
+		GameObject input = GameObject.FindGameObjectWithTag("GameNameInput");
+		if (input != null) gameNameInput = input.GetComponent<tk2dTextMesh>().text;
+		else gameNameInput = "New Game";
+		SetPlayerName();
+		MasterServer.RegisterHost(gameTypeName, gameNameInput);
+		
+		// in we go!
+		Application.LoadLevel("2DGame");
 	}
 	
 	void OnMasterServerEvent(MasterServerEvent msEvent) 
@@ -72,11 +81,14 @@ public class TitleUIManager : MonoBehaviour {
 		float yOffset = 0;
 		foreach(HostData host in hostDataList)
 		{
-			GameObject hostObj = (GameObject) Instantiate(hostEntry);
-			hostObj.transform.position += new Vector3(0,yOffset,0);
-			yOffset += -0.1f;
-			ConfigureHostUIElement(hostObj, host);
-			hostUIElementList.Add(hostObj);
+			if (host.connectedPlayers < host.playerLimit)
+			{
+				GameObject hostObj = (GameObject) Instantiate(hostEntry);
+				hostObj.transform.position += new Vector3(0,yOffset,0);
+				yOffset += -0.1f;
+				ConfigureHostUIElement(hostObj, host);
+				hostUIElementList.Add(hostObj);
+			}
 		}
 	}
 	
@@ -107,14 +119,22 @@ public class TitleUIManager : MonoBehaviour {
 			if (childTransform.gameObject.name == "JoinServerButton")
 			{
 				childTransform.gameObject.GetComponent<HostDataContainer>().hostData = host;
-				childTransform.gameObject.GetComponent<tk2dUIItem>().OnClickUIItem += Click;
+				childTransform.gameObject.GetComponent<tk2dUIItem>().OnClickUIItem += JoinServer;
 			}
 		}
 	}
 	
-	void Click(tk2dUIItem clickedUIItem)
+	void JoinServer(tk2dUIItem clickedUIItem)
 	{
 		HostData host = clickedUIItem.gameObject.GetComponent<HostDataContainer>().hostData;
+		SetPlayerName();
 		Network.Connect(host);
+	}
+	
+	void SetPlayerName()
+	{
+		string gameNameInput;
+		GameObject input = GameObject.FindGameObjectWithTag("UserNameInput");
+		if (input != null) PlayerInfo.playerName = input.GetComponent<tk2dTextMesh>().text;
 	}
 }
