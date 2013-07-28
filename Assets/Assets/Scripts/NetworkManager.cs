@@ -3,91 +3,66 @@ using System.Collections;
 
 public class NetworkManager : MonoBehaviour {
 	
-	public string gameName = "Rogue_Tower_1";
-	public GameObject playerPrefab;
-	public Transform spawnPoint;
+	public GameObject player1Prefab;
+	public GameObject player2Prefab;
+	public GameObject player3Prefab;
+	public GameObject player4Prefab;
 	
-	private bool hostsRefreshing;
-	private bool hostsUpdated;
-	private HostData[] hostDataList;
+	public Transform spawnPoint_P1;
+	public Transform spawnPoint_P2;
+	public Transform spawnPoint_P3;
+	public Transform spawnPoint_P4;
+	
+	int position = 1; // for server to increment and hand out
+	bool spawned = false;
 	
 	void Start()
 	{
-		hostDataList = new HostData[] {};
-	}
-	
-	void OnGUI()
-	{
-		if (!Network.isServer && !Network.isClient)
+		// we're server and just came in, spawn us
+		if (Network.isServer)
 		{
-			if(GUILayout.Button("Start Server"))
-			{
-				Debug.Log("Starting Server");
-				StartServer();
-			}
-			
-			if(GUILayout.Button("Refresh Hosts"))
-			{
-				Debug.Log("Requesting Hosts...");
-				RefreshHostsList();
-			}
-			
-			foreach(HostData host in hostDataList)
-			{
-				if(GUILayout.Button(host.comment))
-				{
-					Network.Connect(host);
-				}
-			}
+			SpawnPlayer();
+			position++;
 		}
-	}
-	
-	void StartServer()
-	{
-		Network.InitializeServer(4, 9001, !Network.HavePublicAddress());
-		MasterServer.RegisterHost(gameName, "Rogue Tower", "poem's game");
 	}
 
-	void RefreshHostsList()
-	{
-		MasterServer.RequestHostList(gameName);
-		hostsRefreshing = true;
-		hostsUpdated = false;
-	}
-	
 	void Update()
 	{
-		if (hostsRefreshing && hostsUpdated)
+		
+	}
+	
+	// on new players connecting to the server
+	void OnPlayerConnected()
+	{
+		// we're server and someone else just came in, tell player where to spawn
+		if (Network.isServer)
 		{
-			hostsRefreshing = false;
-			hostsUpdated = false;
-			Debug.Log("Found " + MasterServer.PollHostList().Length);
-			hostDataList = MasterServer.PollHostList();
+			networkView.RPC("TellIncomingPlayersWhereToSpawn", RPCMode.All, position);
+			position++;
 		}
 	}
 	
-	void OnMasterServerEvent(MasterServerEvent msEvent) 
+	[RPC]
+	void TellIncomingPlayersWhereToSpawn(int newPosition)
 	{
-		if(msEvent == MasterServerEvent.RegistrationSucceeded)
-			Debug.Log("Server Registered");
-		
-		if(msEvent == MasterServerEvent.HostListReceived)
-			hostsUpdated = true;
+		position = newPosition;
+		if (Network.isClient && !spawned)
+		{
+			spawned = true;
+			SpawnPlayer();
+		}
 	}
 	
-	void OnServerInitialized()
-	{
-		Debug.Log("Server Initialized");
-		SpawnPlayer();
-	}
 	
-	void OnConnectedToServer()
-	{
-		SpawnPlayer();
-	}
 	
 	void SpawnPlayer()
 	{
-		Network.Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity, 0);
+		switch (position)
+		{
+		case 1: Network.Instantiate(player1Prefab, spawnPoint_P1.position, Quaternion.identity, 0); break;
+		case 2: Network.Instantiate(player2Prefab, spawnPoint_P2.position, Quaternion.identity, 0); break;
+		case 3: Network.Instantiate(player3Prefab, spawnPoint_P3.position, Quaternion.identity, 0); break;
+		case 4: Network.Instantiate(player4Prefab, spawnPoint_P4.position, Quaternion.identity, 0); break;
+		}
 	}
 }

@@ -85,14 +85,19 @@ public class PlayerMovement : MonoBehaviour
 				// tell network of new position
 				networkView.RPC("BroadcastPosition", RPCMode.AllBuffered, transform.position);
 				
-				if (isJumping) animationClip = "jumping";
+				if (actions.IsSwinging()) animationClip = "picking";
 				else if (walking) animationClip = "walking";
-				else if (actions.IsPicking()) animationClip = "picking";
+				else if (isJumping) animationClip = "jumping";
 				else animationClip = "standing";
 				
 				anim.Play(animationClip);
 				
 				networkView.RPC("BroadcastAnimation", RPCMode.AllBuffered, spriteFlipped, animationClip);
+				
+				// keeps us on the correct z
+				Vector3 pos = transform.position;
+				pos.z = 0;
+				transform.position = pos;
 			}
 		}
 		else // other player

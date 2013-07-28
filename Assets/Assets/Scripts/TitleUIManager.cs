@@ -128,12 +128,12 @@ public class TitleUIManager : MonoBehaviour {
 	{
 		HostData host = clickedUIItem.gameObject.GetComponent<HostDataContainer>().hostData;
 		SetPlayerName();
-		Network.Connect(host);
+		if (Network.Connect(host) == NetworkConnectionError.NoError)
+			Application.LoadLevel("2DGame");
 	}
 	
 	void SetPlayerName()
 	{
-		string gameNameInput;
 		GameObject input = GameObject.FindGameObjectWithTag("UserNameInput");
 		if (input != null) PlayerInfo.playerName = input.GetComponent<tk2dTextMesh>().text;
 	}
