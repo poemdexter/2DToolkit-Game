@@ -20,7 +20,7 @@ public class PlayerActions : MonoBehaviour
 		if (networkView.isMine)
 		{
 			// swing button; we current force player to tap swing everytime he wants to swing again and he has to go for entire animation
-			if (Input.GetButton("Open"))
+			if (PlayerInfo.gameStarted && Input.GetButton("Open"))
 			{
 				// we can swing and now waiting for fresh press, lets do it
 				if (!swinging && !needNewPress) swinging = true;

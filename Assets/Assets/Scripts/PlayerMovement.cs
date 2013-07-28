@@ -48,7 +48,7 @@ public class PlayerMovement : MonoBehaviour
 				controller = GetComponent<CharacterController>();
 				moveDirection = Vector3.zero;
 				
-				if (Input.GetButton("Horizontal"))
+				if (PlayerInfo.gameStarted && Input.GetButton("Horizontal"))
 				{
 					moveDirection.x += Input.GetAxis("Horizontal") * speed * Time.deltaTime;
 					sprite.FlipX = (Input.GetAxis("Horizontal") < 0) ? true : false;
@@ -114,14 +114,14 @@ public class PlayerMovement : MonoBehaviour
 	void ApplyJumping()
 	{
 		// if grounded and jump
-		if (canJump && Input.GetButton("Jump"))
+		if (PlayerInfo.gameStarted && canJump && Input.GetButton("Jump"))
 		{
 			jumpTotalTime = 0;
 			isJumping = true;
 			canJump = false;
 		}
 		// else if still holding jump
-		else if (isJumping && Input.GetButton("Jump"))
+		else if (PlayerInfo.gameStarted && isJumping && Input.GetButton("Jump"))
 		{
 			jumpTotalTime += Time.deltaTime;
 		}

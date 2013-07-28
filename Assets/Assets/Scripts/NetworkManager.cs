@@ -14,7 +14,7 @@ public class NetworkManager : MonoBehaviour {
 	public Transform spawnPoint_P4;
 	
 	int position = 1; // for server to increment and hand out
-	bool spawned = false;
+	public bool spawned = false;
 	
 	void Start()
 	{
@@ -37,7 +37,7 @@ public class NetworkManager : MonoBehaviour {
 		// we're server and someone else just came in, tell player where to spawn
 		if (Network.isServer)
 		{
-			networkView.RPC("TellIncomingPlayersWhereToSpawn", RPCMode.All, position);
+			networkView.RPC("TellIncomingPlayersWhereToSpawn", RPCMode.Others, position);
 			position++;
 		}
 	}
@@ -46,14 +46,13 @@ public class NetworkManager : MonoBehaviour {
 	void TellIncomingPlayersWhereToSpawn(int newPosition)
 	{
 		position = newPosition;
-		if (Network.isClient && !spawned)
+		
+		if (Network.isClient && !spawned && !PlayerInfo.gameStarted)
 		{
 			spawned = true;
 			SpawnPlayer();
 		}
 	}
-	
-	
 	
 	void SpawnPlayer()
 	{
@@ -63,6 +62,7 @@ public class NetworkManager : MonoBehaviour {
 		case 2: Network.Instantiate(player2Prefab, spawnPoint_P2.position, Quaternion.identity, 0); break;
 		case 3: Network.Instantiate(player3Prefab, spawnPoint_P3.position, Quaternion.identity, 0); break;
 		case 4: Network.Instantiate(player4Prefab, spawnPoint_P4.position, Quaternion.identity, 0); break;
+		default: break; // spectating
 		}
 	}
 }
