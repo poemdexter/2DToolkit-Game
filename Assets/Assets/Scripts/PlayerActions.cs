@@ -3,8 +3,7 @@ using System.Collections;
 
 public class PlayerActions : MonoBehaviour 
 {
-	public double secondsToOpen = 3;
-	
+//	public double secondsToOpen = 3;
 //	private bool canOpenChest = true;
 //	private bool openingChest = false;
 	private ChestController attemptedChest;
@@ -15,12 +14,16 @@ public class PlayerActions : MonoBehaviour
 	private bool swinging = false; // controls animation and part of timing logic
 	private bool needNewPress = false; // ensures we're pressing the swing key again after a full length swing
 	
+	public double maxStunnedTime = 1.0;
+	private double currentStunnedTime = 0.0;
+	private bool isStunned = false;
+	
 	void Update()
 	{
 		if (networkView.isMine)
 		{
 			// swing button; we current force player to tap swing everytime he wants to swing again and he has to go for entire animation
-			if (PlayerInfo.gameStarted && Input.GetButton("Open"))
+			if (PlayerInfo.gameStarted && !isStunned && Input.GetButton("Open"))
 			{
 				// we can swing and now waiting for fresh press, lets do it
 				if (!swinging && !needNewPress) swinging = true;
@@ -37,7 +40,7 @@ public class PlayerActions : MonoBehaviour
 				if (currentSwingTime <= maxSwingTime)
 				{
 					// check for collisions with other players
-					CheckCollisionsWithOtherPlayers();
+					CheckHittingOtherPlayers();
 					
 					currentSwingTime += Time.deltaTime;
 				}
@@ -46,6 +49,20 @@ public class PlayerActions : MonoBehaviour
 					swinging = false;
 					currentSwingTime = 0;
 					needNewPress = true;
+				}
+			}
+			
+			if (isStunned)
+			{
+				if (currentStunnedTime <= maxStunnedTime)
+				{
+					currentStunnedTime += Time.deltaTime;
+				}
+				else
+				{
+					isStunned = false;
+					currentStunnedTime = 0;
+					networkView.RPC("TellOthersImNotStunned", RPCMode.AllBuffered, tag);
 				}
 			}
 			
@@ -84,17 +101,32 @@ public class PlayerActions : MonoBehaviour
 		}
 	}
 	
-	void GetOtherPlayerBounds()
+	void CheckHittingOtherPlayers()
 	{
-		
+		foreach(GameObject player in PlayerInfo.GetOtherPlayers(tag))
+		{
+			if (collider.bounds.Intersects(player.collider.bounds))
+			{
+				if (!player.GetComponent<PlayerActions>().isStunned)
+				{
+					networkView.RPC("TellOthersAboutStunningSomeone", RPCMode.AllBuffered, player.tag);
+				}
+			}
+		}
 	}
 	
-	void CheckCollisionsWithOtherPlayers()
+	[RPC]
+	void TellOthersAboutStunningSomeone(string stunnedTag)
 	{
-//		if (collider.bounds.Intersects( ))
-//		{
-//			// collision
-//		}
+		GameObject player = GameObject.FindGameObjectWithTag(stunnedTag);
+		player.GetComponent<PlayerActions>().StunMe();
+	}
+	
+	[RPC]
+	void TellOthersImNotStunned(string myTag)
+	{
+		GameObject player = GameObject.FindGameObjectWithTag(myTag);
+		player.GetComponent<PlayerActions>().Unstunned();
 	}
 	
 	void OnTriggerEnter(Collider collider)
@@ -125,5 +157,21 @@ public class PlayerActions : MonoBehaviour
 	public bool IsSwinging()
 	{
 		return swinging;
+	}
+	
+	public bool IsStunned()
+	{
+		return isStunned;
+	}
+	
+	public void StunMe()
+	{
+		swinging = false;
+		isStunned = true;
+	}
+	
+	public void Unstunned()
+	{
+		isStunned = false;
 	}
 }

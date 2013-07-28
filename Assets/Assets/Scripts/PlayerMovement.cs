@@ -48,7 +48,7 @@ public class PlayerMovement : MonoBehaviour
 				controller = GetComponent<CharacterController>();
 				moveDirection = Vector3.zero;
 				
-				if (PlayerInfo.gameStarted && Input.GetButton("Horizontal"))
+				if (PlayerInfo.gameStarted && !actions.IsStunned() && Input.GetButton("Horizontal"))
 				{
 					moveDirection.x += Input.GetAxis("Horizontal") * speed * Time.deltaTime;
 					sprite.FlipX = (Input.GetAxis("Horizontal") < 0) ? true : false;
@@ -85,7 +85,8 @@ public class PlayerMovement : MonoBehaviour
 				// tell network of new position
 				networkView.RPC("BroadcastPosition", RPCMode.AllBuffered, transform.position);
 				
-				if (actions.IsSwinging()) animationClip = "picking";
+				if (actions.IsStunned()) animationClip = "stunned";
+				else if (actions.IsSwinging()) animationClip = "picking";
 				else if (walking) animationClip = "walking";
 				else if (isJumping) animationClip = "jumping";
 				else animationClip = "standing";
@@ -114,14 +115,14 @@ public class PlayerMovement : MonoBehaviour
 	void ApplyJumping()
 	{
 		// if grounded and jump
-		if (PlayerInfo.gameStarted && canJump && Input.GetButton("Jump"))
+		if (PlayerInfo.gameStarted && !actions.IsStunned() && canJump && Input.GetButton("Jump"))
 		{
 			jumpTotalTime = 0;
 			isJumping = true;
 			canJump = false;
 		}
 		// else if still holding jump
-		else if (PlayerInfo.gameStarted && isJumping && Input.GetButton("Jump"))
+		else if (PlayerInfo.gameStarted && !actions.IsStunned() && isJumping && Input.GetButton("Jump"))
 		{
 			jumpTotalTime += Time.deltaTime;
 		}
