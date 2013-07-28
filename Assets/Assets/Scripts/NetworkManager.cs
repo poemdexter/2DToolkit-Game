@@ -15,7 +15,7 @@ public class NetworkManager : MonoBehaviour {
 	
 	int position = 1; // for server to increment and hand out
 	public bool spawned = false;
-	
+	public int maxScore = 3;
 	void Start()
 	{
 		// we're server and just came in, spawn us
@@ -64,5 +64,93 @@ public class NetworkManager : MonoBehaviour {
 		case 4: Network.Instantiate(player4Prefab, spawnPoint_P4.position, Quaternion.identity, 0); break;
 		default: break; // spectating
 		}
+		
+		// tell people what your name is
+		networkView.RPC("TellOtherPlayersMyName", RPCMode.AllBuffered, position, PlayerInfo.playerName);
+	}
+	
+	[RPC]
+	void TellOtherPlayersMyName(int position, string name)
+	{
+		tk2dTextMesh nameText = null;
+		switch (position)
+		{
+		case 1: 
+			GameObject.Find("Player1Info").transform.position += new Vector3(0,0,-0.2f);
+			nameText = GameObject.Find("p1Name").GetComponent<tk2dTextMesh>(); 
+			break;
+		case 2: 
+			GameObject.Find("Player2Info").transform.position += new Vector3(0,0,-0.2f);
+			nameText = GameObject.Find("p2Name").GetComponent<tk2dTextMesh>(); 
+			break;
+		case 3: 
+			GameObject.Find("Player3Info").transform.position += new Vector3(0,0,-0.2f);
+			nameText = GameObject.Find("p3Name").GetComponent<tk2dTextMesh>(); 
+			break;
+		case 4: 
+			GameObject.Find("Player4Info").transform.position += new Vector3(0,0,-0.2f);
+			nameText = GameObject.Find("p4Name").GetComponent<tk2dTextMesh>(); 
+			break;
+		default: break; // spectating
+		}
+		
+		if (nameText != null)
+		{
+			nameText.text = name;
+			nameText.Commit();
+		}
+	}
+	
+	public void IncreaseKillerScore(string killerTag)
+	{
+		tk2dTextMesh scoreText = null;
+		switch(killerTag)
+		{
+		case "Player1":
+			scoreText = GameObject.Find("p1Score").GetComponent<tk2dTextMesh>();
+			break;
+		case "Player2":
+			scoreText = GameObject.Find("p2Score").GetComponent<tk2dTextMesh>();
+			break;
+		case "Player3":
+			scoreText = GameObject.Find("p3Score").GetComponent<tk2dTextMesh>();
+			break;
+		case "Player4":
+			scoreText = GameObject.Find("p4Score").GetComponent<tk2dTextMesh>();
+			break;
+		}
+		
+		int currentScore = int.Parse(scoreText.text);
+		currentScore++;
+		scoreText.text = currentScore.ToString();
+		scoreText.Commit();
+		
+		if (currentScore == maxScore) networkView.RPC("GameOver", RPCMode.AllBuffered, killerTag);
+	}
+	
+	[RPC]
+	void GameOver(string winnerTag)
+	{
+		// 1. stop people from moving
+		PlayerInfo.gameStarted = false;
+		
+		// 2. inform people of who the winner is
+		// get winner name
+		string name = "";
+		switch(winnerTag)
+		{
+		case "Player1": name = GameObject.Find("p1Name").GetComponent<tk2dTextMesh>().text; break;
+		case "Player2": name = GameObject.Find("p2Name").GetComponent<tk2dTextMesh>().text; break;
+		case "Player3": name = GameObject.Find("p3Name").GetComponent<tk2dTextMesh>().text; break;
+		case "Player4": name = GameObject.Find("p4Name").GetComponent<tk2dTextMesh>().text; break;
+		}
+		// change winner name and show it
+		tk2dTextMesh nameText = GameObject.Find("WinnerName").GetComponent<tk2dTextMesh>();
+		nameText.text = name;
+		nameText.Commit();
+		GameObject.Find("WinnerText").transform.position += new Vector3(0,0,-0.2f);
+		
+		// 3. allow next round to start from host via button
+		GameObject.Find("ExitGameButton").GetComponent<tk2dUIItem>().enabled = true;
 	}
 }

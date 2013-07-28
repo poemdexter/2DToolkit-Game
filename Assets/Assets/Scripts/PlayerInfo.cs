@@ -23,4 +23,9 @@ public class PlayerInfo : MonoBehaviour {
 		
 		return playerList;
 	}
+	
+	public static GameObject[] GetChildren()
+	{
+		return GameObject.FindGameObjectsWithTag("Child");
+	}
 }

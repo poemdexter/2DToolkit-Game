@@ -4,11 +4,12 @@ using System.Collections;
 public class GameUIManager : MonoBehaviour {
 	
 	public tk2dUIItem startButton;
+	public tk2dUIItem exitButton;
 	public tk2dTextMesh waitLabel;
 	
 	void Start()
 	{
-		
+		exitButton.enabled = false;
 	}
 	
 	void OnLevelWasLoaded(int level)
@@ -35,11 +36,13 @@ public class GameUIManager : MonoBehaviour {
     void OnEnable()
     {
         startButton.OnClick += StartGame;
+		exitButton.OnClick += ExitGame;
     }
 
     void OnDisable()
     {
         startButton.OnClick -= StartGame;
+		exitButton.OnClick -= ExitGame;
     }
 	
 	void StartGame()
@@ -54,5 +57,11 @@ public class GameUIManager : MonoBehaviour {
 	{
 		HideWaitLabel();
 		PlayerInfo.gameStarted = true;
+	}
+	
+	void ExitGame()
+	{
+		Network.Disconnect();
+		Application.LoadLevel("TitleScreen");
 	}
 }
