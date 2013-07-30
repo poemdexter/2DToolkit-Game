@@ -76,19 +76,19 @@ public class NetworkManager : MonoBehaviour {
 		switch (position)
 		{
 		case 1: 
-			GameObject.Find("Player1Info").transform.position += new Vector3(0,0,-0.2f);
+			GameObject.Find("Player1Info").transform.position += new Vector3(0,0,-0.3f);
 			nameText = GameObject.Find("p1Name").GetComponent<tk2dTextMesh>(); 
 			break;
 		case 2: 
-			GameObject.Find("Player2Info").transform.position += new Vector3(0,0,-0.2f);
+			GameObject.Find("Player2Info").transform.position += new Vector3(0,0,-0.3f);
 			nameText = GameObject.Find("p2Name").GetComponent<tk2dTextMesh>(); 
 			break;
 		case 3: 
-			GameObject.Find("Player3Info").transform.position += new Vector3(0,0,-0.2f);
+			GameObject.Find("Player3Info").transform.position += new Vector3(0,0,-0.3f);
 			nameText = GameObject.Find("p3Name").GetComponent<tk2dTextMesh>(); 
 			break;
 		case 4: 
-			GameObject.Find("Player4Info").transform.position += new Vector3(0,0,-0.2f);
+			GameObject.Find("Player4Info").transform.position += new Vector3(0,0,-0.3f);
 			nameText = GameObject.Find("p4Name").GetComponent<tk2dTextMesh>(); 
 			break;
 		default: break; // spectating
@@ -148,9 +148,10 @@ public class NetworkManager : MonoBehaviour {
 		tk2dTextMesh nameText = GameObject.Find("WinnerName").GetComponent<tk2dTextMesh>();
 		nameText.text = name;
 		nameText.Commit();
-		GameObject.Find("WinnerText").transform.position += new Vector3(0,0,-0.2f);
+		GameObject.Find("WinnerText").transform.position += new Vector3(0,0,-0.3f);
 		
 		// 3. allow next round to start from host via button
 		GameObject.Find("ExitGameButton").GetComponent<tk2dUIItem>().enabled = true;
+		GameObject.Find("ExitGameButton").collider.enabled = true;
 	}
 }

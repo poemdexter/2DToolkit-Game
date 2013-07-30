@@ -46,7 +46,7 @@ public class PlayerMovement : MonoBehaviour
 			if (canMove)
 			{
 				controller = GetComponent<CharacterController>();
-				moveDirection = Vector3.zero;
+				moveDirection = new Vector3(0,0,-0.1f);
 				
 				if (PlayerInfo.gameStarted && !actions.IsStunned() && Input.GetButton("Horizontal"))
 				{
