@@ -12,6 +12,9 @@ public class PlayerActions : MonoBehaviour
 	private double currentStunnedTime = 0.0;
 	private bool isStunned = false;
 	
+	public AudioClip swingingAudioClip;
+	public AudioClip stunnedAudioClip;
+	
 	void Update()
 	{
 		if (networkView.isMine)
@@ -20,7 +23,13 @@ public class PlayerActions : MonoBehaviour
 			if (PlayerInfo.gameStarted && !isStunned && Input.GetButton("Open"))
 			{
 				// we can swing and now waiting for fresh press, lets do it
-				if (!swinging && !needNewPress) swinging = true;
+				if (!swinging && !needNewPress)
+				{
+					swinging = true;
+					
+					// TODO: Play swinging audio
+					AudioSource.PlayClipAtPoint(swingingAudioClip, Camera.main.transform.position);
+				}
 			}
 			else // let go of button
 			{
@@ -135,6 +144,9 @@ public class PlayerActions : MonoBehaviour
 	{
 		swinging = false;
 		isStunned = true;
+		
+		// play stun audio
+		AudioSource.PlayClipAtPoint(stunnedAudioClip, Camera.main.transform.position, .7f);
 	}
 	
 	public void Unstunned()
