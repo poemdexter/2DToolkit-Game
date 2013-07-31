@@ -7,7 +7,7 @@ public class DoctorScript : MonoBehaviour {
 	private tk2dSpriteAnimator anim;
 	
 	public float speed = 10;
-	private int direction = 1; // right
+	public int direction = 1; // right
 	private float distToGround;
 	
 	public float gravity = 3.0f;

@@ -60,6 +60,8 @@ public class PlayerActions : MonoBehaviour
 					networkView.RPC("TellOthersImNotStunned", RPCMode.AllBuffered, tag);
 				}
 			}
+			
+			if (!isStunned) CheckHittingADoctor();
 		}
 	}
 	
@@ -73,6 +75,18 @@ public class PlayerActions : MonoBehaviour
 				{
 					networkView.RPC("TellOthersAboutStunningSomeone", RPCMode.AllBuffered, player.tag);
 				}
+			}
+		}
+	}
+	
+	void CheckHittingADoctor()
+	{
+		foreach(GameObject doctor in GameObject.FindGameObjectsWithTag("Enemy"))
+		{
+			if (collider.bounds.Intersects(doctor.collider.bounds))
+			{
+				networkView.RPC("TellOthersAboutStunningSomeone", RPCMode.AllBuffered, tag);
+				StunMe();
 			}
 		}
 	}
