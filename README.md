@@ -1,4 +1,6 @@
-2DToolkit-Game
+Kids Bop
 ==============
 
-2D Toolkit Prototype
+SomethingAwful Game Dev Challenge VIII entry.
+
+http://labtanner.com/gamedev/index.php?title=GameDevVIII:Kids_Bop
